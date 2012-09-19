@@ -3,9 +3,9 @@
 # A Jekyll plug-in for embedding Flickr photos in your Liquid templates.
 # 
 # Usage: 
-# 	
+#   
 #   {% flickr_photo 1234567890 %}
-# 	{% flickr_photo 1234567890 "Large Square" %}
+#   {% flickr_photo 1234567890 "Large Square" %}
 #
 #   ... where 1234567890 is the Flickr photo ID, and "Large Square" is the size label, as defined here by Flickr:
 #   
@@ -41,10 +41,13 @@ module Jekyll
 
     def render(context)
         @api_key = context.registers[:site].config["flickr"]["api_key"]
-        @@cached[photo_key] || get_photo
+        @photo.merge!(@@cached[photo_key] || get_photo)
+
+        selected_size = @photo[:sizes][@photo[:size]]
+        "<a class=\"thumbnail\" href=\"#{@photo[:url]}\"><img src=\"#{selected_size[:source]}\" title=\"#{@photo[:title]}\"></a>"
     end
 
-    def get_photo
+    def get_photo]
         hydra = Typhoeus::Hydra.new
 
         urls_req = Typhoeus::Request.new("http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
@@ -52,12 +55,10 @@ module Jekyll
             parsed = Nokogiri::XML(resp.body)
             parsed.css("size").each do |el|
                 @photo[:sizes][el["label"]] = { 
-                    :size => { 
-                        :width => el["width"], 
-                        :height => el["height"], 
-                        :source => el["source"], 
-                        :url => el["url"] 
-                    } 
+                    :width => el["width"], 
+                    :height => el["height"],
+                    :source => el["source"], 
+                    :url => el["url"]
                 }
             end
         end
@@ -84,9 +85,6 @@ module Jekyll
         hydra.run
 
         @@cached[photo_key] = @photo
-
-        selected_size = @photo[:sizes][@photo[:size]][:size]
-        "<a class=\"thumbnail\" href=\"#{@photo[:url]}\"><img src=\"#{selected_size[:source]}\" title=\"#{@photo[:title]}\"></a>"
     end
 
     def photo_key
