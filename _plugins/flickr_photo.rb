@@ -47,7 +47,7 @@ module Jekyll
         "<a class=\"thumbnail\" href=\"#{@photo[:url]}\"><img src=\"#{selected_size[:source]}\" title=\"#{@photo[:title]}\"></a>"
     end
 
-    def get_photo]
+    def get_photo
         hydra = Typhoeus::Hydra.new
 
         urls_req = Typhoeus::Request.new("http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
