@@ -50,7 +50,7 @@ module Jekyll
     def get_photo
         hydra = Typhoeus::Hydra.new
 
-        urls_req = Typhoeus::Request.new("http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
+        urls_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
         urls_req.on_complete do |resp|
             parsed = Nokogiri::XML(resp.body)
             parsed.css("size").each do |el|
@@ -63,7 +63,7 @@ module Jekyll
             end
         end
 
-        info_req = Typhoeus::Request.new("http://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
+        info_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
         info_req.on_complete do |resp|
             parsed = Nokogiri::XML(resp.body)
             @photo[:title] = parsed.css("title").inner_text
@@ -71,7 +71,7 @@ module Jekyll
             @photo[:url] = parsed.css("urls url").inner_text
         end
 
-        exif_req = Typhoeus::Request.new("http://api.flickr.com/services/rest/?method=flickr.photos.getExif&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
+        exif_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getExif&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
         exif_req.on_complete do |resp|
             parsed = Nokogiri::XML(resp.body)
             parsed.css("exif").each do |el|
