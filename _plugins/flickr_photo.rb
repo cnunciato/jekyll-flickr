@@ -1,14 +1,14 @@
 # Flickr Photo Tag
 #
 # A Jekyll plug-in for embedding Flickr photos in your Liquid templates.
-# 
-# Usage: 
-#   
+#
+# Usage:
+#
 #   {% flickr_photo 1234567890 %}
 #   {% flickr_photo 1234567890 "Large Square" %}
 #
 #   ... where 1234567890 is the Flickr photo ID, and "Large Square" is the size label, as defined here by Flickr:
-#   
+#
 #   http://www.flickr.com/services/api/flickr.photos.getSizes.html
 
 #   Medium (~500px width) is the default.
@@ -33,6 +33,12 @@ module Jekyll
 
     @@cached = {} # Prevents multiple requests for the same photo
 
+    @@err_text = "This photo or video is not available."
+    @@err_uri_placeholder = "https://s.yimg.com/pw/images/photo_unavailable.gif"
+    @@err_uri_link = "http://flickr.com"
+    @@err_width = "400"
+    @@err_height = "300"
+
     def initialize(tag_name, markup, tokens)
       super
       params = Shellwords.shellwords markup
@@ -53,23 +59,43 @@ module Jekyll
         urls_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getSizes&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
         urls_req.on_complete do |resp|
             parsed = Nokogiri::XML(resp.body)
+            parsed.css("rsp").each do |status|
+            if status["stat"] == "ok" then # Check to make sure an OK status is returned
             parsed.css("size").each do |el|
-                @photo[:sizes][el["label"]] = { 
-                    :width => el["width"], 
+                @photo[:sizes][el["label"]] = {
+                    :width => el["width"],
                     :height => el["height"],
-                    :source => el["source"], 
+                    :source => el["source"],
                     :url => el["url"]
                 }
             end
+          else
+            # Where a photo id is either not found or is marked as private
+            @photo[:sizes][@photo[:size]] = {
+                :width => @@err_width,
+                :height => @@err_height,
+                :source => @@err_uri_placeholder,
+                :url => @@err_uri_placeholder
+              }
+          end
         end
+      end
 
-        info_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
-        info_req.on_complete do |resp|
-            parsed = Nokogiri::XML(resp.body)
-            @photo[:title] = parsed.css("title").inner_text
-            @photo[:caption] = parsed.css("description").inner_text
-            @photo[:url] = parsed.css("urls url").inner_text
+      info_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
+      info_req.on_complete do |resp|
+          parsed = Nokogiri::XML(resp.body)
+          parsed.css("rsp").each do |status|
+            if status["stat"] == "ok" then # Only parse if stat = 'ok'
+              @photo[:title] = parsed.css("title").inner_text
+              @photo[:caption] = parsed.css("description").inner_text
+              @photo[:url] = parsed.css("urls url").inner_text
+            else
+              @photo[:title] = @@err_text
+              @photo[:caption] = @err_text
+              @photo[:url] = @@err_uri_link
+            end
         end
+      end
 
         exif_req = Typhoeus::Request.new("https://api.flickr.com/services/rest/?method=flickr.photos.getExif&api_key=#{@api_key}&photo_id=#{@photo[:id]}")
         exif_req.on_complete do |resp|
