@@ -19,5 +19,5 @@ A Jekyll plug-in for embedding Flickr photos in your Liquid templates.
     flickr:
       api_key: kjh3g4kj1h2gkjh1gvbnvd7o1khmqjh2g3
 
-  [Get your API key here](You can obtain a Flickr API key here: http://www.flickr.com/services/apps/create/).
+  [Get your API key here](http://www.flickr.com/services/apps/create/).
   
