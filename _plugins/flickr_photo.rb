@@ -114,7 +114,7 @@ module Jekyll
     end
 
     def photo_key
-        "#{@photo[:id]}"
+        "#{@photo[:id]}-#{@photo[:size]}"      
     end
 
   end
